@@ -29,3 +29,7 @@ Thumbs.db
 # --models-dir models/large`; only its metrics are committed.
 models/large/*
 !models/large/metrics.json
+
+# Working notes kept outside the repo
+docs/superpowers/
+.impeccable/

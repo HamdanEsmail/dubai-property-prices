@@ -47,6 +47,30 @@ def test_comps_limited_and_sorted(tmp_path):
     assert payload["monthly"]["2026-01"]["n"] > 0
 
 
+def test_profiles_in_area_file(tmp_path):
+    df, _ = _export(tmp_path)
+    payload = json.loads((tmp_path / "areas" / "alpha.json").read_text(encoding="utf-8"))
+    profiles = payload["profiles"]["Flat"]
+    assert "_all" in profiles and "Studio" in profiles
+    for prof in profiles["Studio"]:
+        assert len(prof) == 6  # metro, mall, landmark, parking, freehold, share
+    assert abs(sum(p[5] for p in profiles["Studio"]) - 1) < 0.01
+    assert profiles["Studio"][0][5] >= profiles["Studio"][-1][5]  # most common first
+
+
+def test_explorer_evaluation_scores_test_rows(tmp_path):
+    from dubai_prices import model
+
+    df = synthetic()
+    models_dir = tmp_path / "models"
+    model.train_and_evaluate(df, models_dir, params=model.FAST_PARAMS)
+    result = export_web.explorer_evaluation(df, models_dir)
+    assert result["n"] == len(df[df["date"] >= "2026-09-01"])
+    assert 0 <= result["coverage_80"] <= 1 and result["mdape_ppsqm"] > 0
+    assert 1 <= result["profiles_per_row"] <= export_web.MAX_PROFILES
+    assert (models_dir / "explorer_metrics.json").exists()
+
+
 def test_monthly_keys(tmp_path):
     df, _ = _export(tmp_path)
     monthly = json.loads((tmp_path / "monthly.json").read_text(encoding="utf-8"))

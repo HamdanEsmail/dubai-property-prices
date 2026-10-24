@@ -35,6 +35,13 @@ PARKING_CAP = 10
 
 SMALL_WORDS = {"of", "and", "the", "al", "bin", "by"}
 
+# Spelling variants of the same place in the NEAREST_METRO_EN field.
+METRO_FIXES = {
+    "Jumeirah Beach Resdency": "Jumeirah Beach Residency",
+    "Palm Deira Metro Stations": "Palm Deira Metro Station",
+    "Buj Khalifa Dubai Mall Metro Station": "Burj Khalifa Dubai Mall Metro Station",
+}
+
 
 @dataclass(frozen=True)
 class CleanStep:
@@ -149,6 +156,7 @@ def clean_sales(df: pd.DataFrame) -> tuple[pd.DataFrame, list[CleanStep]]:
 
     df = df.assign(
         area=df["area"].map(normalise_area).astype("string"),
+        nearest_metro=df["nearest_metro"].replace(METRO_FIXES),
         ym=df["date"].dt.strftime("%Y-%m"),
         month_n=df["date"].dt.month.astype(int),
         rooms_n=df["rooms"].map(rooms_to_number).astype(float),

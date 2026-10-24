@@ -64,20 +64,37 @@ function renderMarket() {
     : `Middle half of ${fmtInt(r.n)} registered sales in 2026, median AED ${fmtInt(r.median)} per sqm (AED ${fmtInt(r.p25)} to ${fmtInt(r.p75)}).${mix}`;
 }
 
+// The visitor knows the community but not the building, and within a community the
+// nearest metro, mall and landmark act as a sub-location. So the model is averaged
+// (in log space) over the sub-location profiles seen in this cell's own sales.
+function profilesFor(type, rooms) {
+  const byType = state.areaFile?.profiles?.[type];
+  if (byType) return byType[rooms] || byType._all;
+  const d = sub().defaults;
+  return [[d.nearest_metro, d.nearest_mall, d.nearest_landmark, d.parking_n, d.is_freehold ? 1 : 0, 1]];
+}
+
 function renderEstimate() {
-  const c = cell(), s = sub(), size = Number($("size").value) || c.median_size;
+  const c = cell(), size = Number($("size").value) || c.median_size;
   if (!state.model) return;
-  const d = s.defaults;
-  const row = {
+  const base = {
     area: $("area").value, property_subtype: $("type").value, rooms: $("rooms").value, rooms_n: roomsN($("rooms").value),
-    nearest_metro: d.nearest_metro, nearest_mall: d.nearest_mall, nearest_landmark: d.nearest_landmark,
-    actual_area_sqm: size, is_offplan: Number($("offplan").value), is_freehold: d.is_freehold ? 1 : 0,
-    parking_n: d.parking_n, month_n: state.model.month_n,
+    actual_area_sqm: size, is_offplan: Number($("offplan").value), month_n: state.model.month_n,
   };
-  const p = predictPpsqm(state.model, row);
-  $("estimate").textContent = fmtAed(p.point * size);
-  $("estimate-range").textContent = `80% range ${fmtAed(p.lo * size)} to ${fmtAed(p.hi * size)} · AED ${fmtInt(p.point)} per sqm`;
-  $("model-note").textContent = `${$("offplan").value === "1" ? "Off-plan" : "Ready"} ${roomsText($("rooms").value)} ${typeText()} of ${fmtInt(size)} sqm, priced as of ${state.model.month_label}. Nearby metro, mall and landmark are taken from the community's typical listing.`;
+  let sumPoint = 0, sumLo = 0, sumHi = 0, sumW = 0;
+  const profiles = profilesFor($("type").value, $("rooms").value);
+  for (const [metro, mall, landmark, parking, freehold, share] of profiles) {
+    const p = predictPpsqm(state.model, { ...base, nearest_metro: metro, nearest_mall: mall, nearest_landmark: landmark, parking_n: parking, is_freehold: freehold });
+    sumPoint += share * Math.log(p.point);
+    sumLo += share * Math.log(p.lo);
+    sumHi += share * Math.log(p.hi);
+    sumW += share;
+  }
+  const point = Math.exp(sumPoint / sumW), lo = Math.exp(sumLo / sumW), hi = Math.exp(sumHi / sumW);
+  $("estimate").textContent = fmtAed(point * size);
+  $("estimate-range").textContent = `80% range ${fmtAed(lo * size)} to ${fmtAed(hi * size)} · AED ${fmtInt(point)} per sqm`;
+  const where = profiles.length > 1 ? `averaged over the ${profiles.length} most common nearby-metro, mall and landmark combinations in these sales, since the building is not known` : "using the community's typical nearby metro, mall and landmark";
+  $("model-note").textContent = `${$("offplan").value === "1" ? "Off-plan" : "Ready"} ${roomsText($("rooms").value)} ${typeText()} of ${fmtInt(size)} sqm, priced as of ${state.model.month_label}, ${where}.`;
 }
 
 async function renderArea() {
@@ -108,11 +125,15 @@ async function renderArea() {
   ], $("tooltip"));
 }
 
-function update() {
+async function update() {
   renderMarket();
-  renderEstimate();
   writeUrl();
-  renderArea().catch((e) => { $("comps-note").textContent = `Could not load this community's sales (${e.message}).`; });
+  try {
+    await renderArea();
+  } catch (e) {
+    $("comps-note").textContent = `Could not load this community's sales (${e.message}).`;
+  }
+  renderEstimate();
 }
 
 function wire() {
@@ -132,11 +153,13 @@ async function init() {
   $("row-count").textContent = fmtInt(meta.rows);
   const m = meta.metrics;
   $("metrics").textContent = `median error ${m.model.mdape_ppsqm.toFixed(1)}% on ${fmtInt(m.test.rows)} later sales, against ${m.baseline.mdape_ppsqm.toFixed(1)}% for a simple median lookup; the 80% range covered ${(m.model.coverage_80 * 100).toFixed(0)}% of them`;
+  if (m.explorer) $("explorer-metrics").textContent = `; scored that way, the median error on the same later sales is ${m.explorer.mdape_ppsqm.toFixed(1)}% and the 80% range covers ${(m.explorer.coverage_80 * 100).toFixed(0)}%`;
   syncControls(readUrl());
   wire();
-  update();
+  const first = update();
   try {
     state.model = await loadJson("data/model.json");
+    await first;
     renderEstimate();
   } catch (e) {
     $("estimate").textContent = "unavailable";

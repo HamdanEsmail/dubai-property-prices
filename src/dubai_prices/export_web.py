@@ -51,6 +51,39 @@ def _defaults(df: pd.DataFrame) -> dict:
     }
 
 
+PROFILE_COLUMNS = ["nearest_metro", "nearest_mall", "nearest_landmark", "parking_n"]
+MAX_PROFILES = 6
+MIN_PROFILE_ROWS = 10
+
+
+def cell_profiles(rows: pd.DataFrame, max_profiles: int = MAX_PROFILES) -> list[list]:
+    """The most common (metro, mall, landmark, parking, freehold) combinations in a cell
+    with their shares. The explorer averages the model over them because a visitor
+    knows the community but not which corner of it; within a community the nearest
+    metro behaves like a sub-location and can move the estimate by a quarter."""
+    key = rows[PROFILE_COLUMNS].astype(object)
+    key["is_freehold"] = rows["is_freehold"].astype("Float64").fillna(1).astype(int).to_numpy()
+    counts = key.value_counts(dropna=False).head(max_profiles)
+    total = float(counts.sum())
+    out = []
+    for idx, n in counts.items():
+        values = [None if (v is None or (isinstance(v, float) and np.isnan(v))) else (int(v) if isinstance(v, (int, np.integer)) else str(v)) for v in idx]
+        out.append([*values, round(n / total, 3)])
+    return out
+
+
+def build_profiles(df: pd.DataFrame) -> dict:
+    """profiles[subtype]['_all'] for the community x type, and profiles[subtype][rooms]
+    for cells with at least MIN_PROFILE_ROWS sales."""
+    out: dict = {}
+    for subtype, s in df.groupby("property_subtype", observed=True):
+        out[str(subtype)] = {"_all": cell_profiles(s)}
+        for rooms, r in s.groupby(s["rooms"].fillna("NA"), observed=True):
+            if len(r) >= MIN_PROFILE_ROWS:
+                out[str(subtype)][str(rooms)] = cell_profiles(r)
+    return out
+
+
 def _rooms_sorted(labels) -> list[str]:
     return sorted(labels, key=lambda r: (ROOMS_ORDER.index(r) if r in ROOMS_ORDER else len(ROOMS_ORDER), str(r)))
 
@@ -106,18 +139,80 @@ def export_web(df: pd.DataFrame, metrics: dict, clean_report: dict, out_dir: Pat
     _write(out_dir / "stats.json", stats)
     _write(out_dir / "monthly.json", build_monthly(df))
     for area, a in df.groupby("area", observed=True):
-        _write(out_dir / "areas" / f"{slug(area)}.json", {"area": str(area), "monthly": _monthly(a), "comps": _comps(a, max_comps)})
+        _write(out_dir / "areas" / f"{slug(area)}.json",
+               {"area": str(area), "monthly": _monthly(a), "comps": _comps(a, max_comps), "profiles": build_profiles(a)})
     meta = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "data_as_of": str(clean_report["date_max"])[:10],
         "date_min": str(clean_report["date_min"])[:10],
         "rows": int(clean_report["clean_rows"]),
         "raw_rows": int(clean_report["raw_rows"]),
-        "metrics": {k: metrics[k] for k in ("model", "baseline", "train", "test") if k in metrics},
+        "metrics": {k: metrics[k] for k in ("model", "baseline", "train", "test", "explorer") if k in metrics},
         "clean_steps": clean_report.get("steps", []),
     }
     _write(out_dir / "meta.json", meta)
     return {"areas": stats["n_areas"], "rows": int(len(df))}
+
+
+def explorer_evaluation(df: pd.DataFrame, models_dir: Path, train_end=None) -> dict:
+    """Score the estimate the explorer shows: the model averaged over the sub-location
+    profiles of the cell (built from training months only), applied to the test months.
+    This is the honest number for a visitor who knows community, type, rooms, size and
+    status but not the building."""
+    import lightgbm as lgb
+
+    from .features import make_features
+    from .model import coverage, metrics, temporal_split
+
+    models_dir = Path(models_dir)
+    train, test = temporal_split(df) if train_end is None else temporal_split(df, train_end)
+    categories = json.loads((models_dir / "categories.json").read_text(encoding="utf-8"))
+    adjust = json.loads((models_dir / "metrics.json").read_text(encoding="utf-8"))["model"]["interval_adjust_log"]
+    boosters = {n: lgb.Booster(model_file=str(models_dir / f"{n}.txt")) for n in ("point", "q10", "q90")}
+
+    profiles: dict = {}
+    for (area, subtype), s in train.groupby(["area", "property_subtype"], observed=True):
+        profiles[(area, subtype, None)] = cell_profiles(s)
+        for rooms, r in s.groupby(s["rooms"].fillna("NA"), observed=True):
+            if len(r) >= MIN_PROFILE_ROWS:
+                profiles[(area, subtype, rooms)] = cell_profiles(r)
+
+    pieces, weights, owners = [], [], []
+    for i, row in enumerate(test.itertuples(index=False)):
+        rooms = "NA" if pd.isna(row.rooms) else row.rooms
+        profs = profiles.get((row.area, row.property_subtype, rooms)) or profiles.get((row.area, row.property_subtype, None))
+        if not profs:  # community unseen in training: the model's unknown-category path
+            profs = [[None, None, None, 0, 1, 1.0]]
+        for metro, mall, landmark, parking, freehold, share in profs:
+            pieces.append({"area": row.area, "property_subtype": row.property_subtype, "rooms": row.rooms, "rooms_n": row.rooms_n,
+                           "nearest_metro": metro, "nearest_mall": mall, "nearest_landmark": landmark,
+                           "actual_area_sqm": row.actual_area_sqm, "is_offplan": row.is_offplan, "is_freehold": bool(freehold),
+                           "parking_n": parking, "month_n": row.month_n})
+            weights.append(share)
+            owners.append(i)
+    expanded = pd.DataFrame(pieces)
+    expanded["is_offplan"] = expanded["is_offplan"].astype("boolean")
+    expanded["is_freehold"] = expanded["is_freehold"].astype("boolean")
+    X, _ = make_features(expanded, categories)
+    w = np.asarray(weights)
+    owners = np.asarray(owners)
+    agg = {}
+    for name, b in boosters.items():
+        log_pred = b.predict(X)
+        sums = np.bincount(owners, weights=w * log_pred, minlength=len(test))
+        norm = np.bincount(owners, weights=w, minlength=len(test))
+        agg[name] = sums / norm
+    point = np.exp(agg["point"])
+    lo = np.exp(np.minimum(agg["q10"], agg["q90"]) - adjust)
+    hi = np.exp(np.maximum(agg["q10"], agg["q90"]) + adjust)
+    lo, hi = np.minimum(lo, point), np.maximum(hi, point)
+    y = test["price_per_sqm"].to_numpy(dtype=float)
+    result = metrics(y, point, test["actual_area_sqm"].to_numpy(dtype=float))
+    result["coverage_80"] = coverage(y, lo, hi)
+    result["median_interval_width_pct"] = float(np.median((hi - lo) / point * 100))
+    result["profiles_per_row"] = float(len(pieces) / len(test))
+    (models_dir / "explorer_metrics.json").write_text(json.dumps(result, indent=1), encoding="utf-8")
+    return result
 
 
 def _write(path: Path, payload) -> None:
@@ -129,6 +224,7 @@ def export_all(processed_dir: Path, models_dir: Path, web_dir: Path, charts_dir:
 
     df = pd.read_parquet(Path(processed_dir) / "sales_clean.parquet")
     metrics = json.loads((Path(models_dir) / "metrics.json").read_text(encoding="utf-8"))
+    metrics["explorer"] = explorer_evaluation(df, models_dir)
     report = json.loads((Path(processed_dir) / "clean_report.json").read_text(encoding="utf-8"))
     summary = export_web(df, metrics, report, Path(web_dir) / "data")
     model_info = export_model(models_dir, Path(web_dir) / "data" / "model.json")

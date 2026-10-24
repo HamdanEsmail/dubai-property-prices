@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-24T15:21:07+00:00",
+ "generated_at": "2026-10-24T15:55:45+00:00",
  "train": {
   "rows": 93377,
   "start": "2026-01-01",
@@ -20,23 +20,23 @@
  },
  "model": {
   "n": 16329,
-  "mae_ppsqm": 2192.5920864704503,
-  "mdape_ppsqm": 7.721840500955052,
-  "mae_total": 248577.63284760382,
-  "mdape_total": 7.721840500955055,
-  "coverage_80": 0.7806969195909119,
-  "coverage_80_raw": 0.7319492926694837,
-  "interval_adjust_log": 0.009925450083373895,
-  "median_interval_width_pct": 32.3958371718243
+  "mae_ppsqm": 2205.188956180035,
+  "mdape_ppsqm": 7.784643447216564,
+  "mae_total": 249339.51664414856,
+  "mdape_total": 7.7846434472165535,
+  "coverage_80": 0.7784310123093882,
+  "coverage_80_raw": 0.7372772368179313,
+  "interval_adjust_log": 0.009365104986394255,
+  "median_interval_width_pct": 32.24190654484197
  },
  "by_segment": {
   "Flat": {
    "model": {
     "n": 15061,
-    "mae_ppsqm": 2177.494520573381,
-    "mdape_ppsqm": 7.689775093308684,
-    "mae_total": 214169.099554504,
-    "mdape_total": 7.689775093308686
+    "mae_ppsqm": 2189.5782272764613,
+    "mdape_ppsqm": 7.738227865102518,
+    "mae_total": 215079.5783373439,
+    "mdape_total": 7.7382278651025285
    },
    "baseline": {
     "n": 15061,
@@ -45,15 +45,15 @@
     "mae_total": 306516.16760475666,
     "mdape_total": 10.803344740615174
    },
-   "coverage_80": 0.7814222163202974
+   "coverage_80": 0.7798950932872983
   },
   "Villa": {
    "model": {
     "n": 1268,
-    "mae_ppsqm": 2371.9173545901367,
-    "mdape_ppsqm": 8.17574918014984,
-    "mae_total": 657273.941938595,
-    "mdape_total": 8.175749180149843
+    "mae_ppsqm": 2390.6094514613605,
+    "mdape_ppsqm": 8.459615249212767,
+    "mae_total": 656270.8501132218,
+    "mdape_total": 8.459615249212767
    },
    "baseline": {
     "n": 1268,
@@ -62,15 +62,15 @@
     "mae_total": 786591.8871047079,
     "mdape_total": 11.582246994892794
    },
-   "coverage_80": 0.7720820189274448
+   "coverage_80": 0.7610410094637224
   },
   "off-plan": {
    "model": {
     "n": 11422,
-    "mae_ppsqm": 2015.5088658764707,
-    "mdape_ppsqm": 6.831296722185785,
-    "mae_total": 202487.58748707853,
-    "mdape_total": 6.831296722185789
+    "mae_ppsqm": 2030.6168386527793,
+    "mdape_ppsqm": 6.919981483000253,
+    "mae_total": 203656.52992941026,
+    "mdape_total": 6.919981483000251
    },
    "baseline": {
     "n": 11422,
@@ -79,15 +79,15 @@
     "mae_total": 270912.96630721644,
     "mdape_total": 9.035425971648106
    },
-   "coverage_80": 0.7686919978987918
+   "coverage_80": 0.7646646821922606
   },
   "ready": {
    "model": {
     "n": 4907,
-    "mae_ppsqm": 2604.7878365467573,
-    "mdape_ppsqm": 10.271515209846816,
-    "mae_total": 355861.2069474449,
-    "mdape_total": 10.271515209846815
+    "mae_ppsqm": 2611.539623878489,
+    "mdape_ppsqm": 10.337228516067682,
+    "mae_total": 355675.5823168082,
+    "mdape_total": 10.337228516067682
    },
    "baseline": {
     "n": 4907,
@@ -96,20 +96,20 @@
     "mae_total": 513444.1842231473,
     "mdape_total": 16.27579068153525
    },
-   "coverage_80": 0.8086407173425718
+   "coverage_80": 0.8104748318728348
   }
  },
  "calibration": {
   "month": "2026-08",
   "rows": 10015,
   "target": 0.8,
-  "raw_coverage": 0.7556665002496256,
-  "adjust_log": 0.009925450083373895
+  "raw_coverage": 0.7579630554168747,
+  "adjust_log": 0.009365104986394255
  },
  "rounds": {
-  "point": 564,
-  "q10": 783,
-  "q90": 800
+  "point": 496,
+  "q10": 794,
+  "q90": 731
  },
  "params": {
   "num_leaves": 31,
@@ -162,52 +162,52 @@
  "importance": [
   {
    "feature": "area",
-   "gain_share": 0.6536313486351186
+   "gain_share": 0.6575831626651364
   },
   {
    "feature": "log_area",
-   "gain_share": 0.10444429180212421
+   "gain_share": 0.10094682546186166
   },
   {
    "feature": "is_offplan",
-   "gain_share": 0.06578205745210582
+   "gain_share": 0.06587984020693785
   },
   {
    "feature": "nearest_metro",
-   "gain_share": 0.06489537012886121
+   "gain_share": 0.06498323486037114
   },
   {
    "feature": "nearest_landmark",
-   "gain_share": 0.05628241786612533
-  },
-  {
-   "feature": "month_n",
-   "gain_share": 0.014212057535752625
+   "gain_share": 0.0565398832656492
   },
   {
    "feature": "parking_n",
-   "gain_share": 0.014017201685374694
+   "gain_share": 0.014086851528399892
+  },
+  {
+   "feature": "month_n",
+   "gain_share": 0.013837489885252904
   },
   {
    "feature": "rooms_n",
-   "gain_share": 0.0110567200501257
+   "gain_share": 0.011526744172622425
   },
   {
    "feature": "rooms",
-   "gain_share": 0.0073431168896933826
+   "gain_share": 0.0072046573805652995
   },
   {
    "feature": "property_subtype",
-   "gain_share": 0.006381084022396275
+   "gain_share": 0.005660922574382068
   },
   {
    "feature": "nearest_mall",
-   "gain_share": 0.0016824878805657643
+   "gain_share": 0.0014450967198063392
   },
   {
    "feature": "is_freehold",
-   "gain_share": 0.0002718460517563275
+   "gain_share": 0.00030529127901481165
   }
  ],
- "summary": "train 93,377 rows (2026-01-01 to 2026-08-31), test 16,329 rows (2026-09-01 to 2026-10-24)\nbaseline: MAE 3,129 AED/sqm, MdAPE 10.9%\nmodel:    MAE 2,193 AED/sqm, MdAPE 7.7%, 80% interval coverage 78.1% (raw 73.2%, calibrated on 2026-08)"
+ "summary": "train 93,377 rows (2026-01-01 to 2026-08-31), test 16,329 rows (2026-09-01 to 2026-10-24)\nbaseline: MAE 3,129 AED/sqm, MdAPE 10.9%\nmodel:    MAE 2,205 AED/sqm, MdAPE 7.8%, 80% interval coverage 77.8% (raw 73.7%, calibrated on 2026-08)"
 }

@@ -15,8 +15,8 @@ never saw, and ships the result as a small static explorer that runs in the brow
 | Source | DLD open data, Transactions (132,562 raw sales rows), fetched 24 October 2026 |
 | Validation | fitted on January to August (93,377 sales), scored on September to 24 October (16,329 sales) |
 | Baseline error | median by community, type and rooms: 10.9% median absolute error per sqm |
-| Model error | gradient boosting: 7.7% median absolute error per sqm (2,193 AED per sqm MAE) |
-| 80% interval | covers 78% of the later sales after calibration on August (73% before) |
+| Model error | gradient boosting: 7.8% median absolute error per sqm (2,205 AED per sqm MAE) |
+| 80% interval | covers 78% of the later sales after calibration on August (74% before) |
 
 ## The question
 
@@ -97,7 +97,7 @@ ask.
 - *Baseline:* the median price per sqm of 2026 sales in the same community, sub-type
   and room count, falling back to community and sub-type, then sub-type. This is
   what a careful person with a spreadsheet would do.
-- *Model:* LightGBM gradient boosting, 564 trees of up to 31
+- *Model:* LightGBM gradient boosting, 496 trees of up to 31
   leaves, with the categorical features handled natively.
 
 **Validation is temporal, not random.** The model is fitted on sales registered
@@ -110,28 +110,28 @@ trees (early stopping), and then the model is refitted on all eight months.
 price per sqm. On their own they were too narrow: fitted on January to July, they
 covered 76% of August sales rather than 80%. So the
 band is widened by a constant in log space chosen on August (a split-conformal step,
-1.0% each way) and then checked on the test months, which
+0.9% each way) and then checked on the test months, which
 it never saw.
 
 ### Results on September to 24 October 2026 (16,329 sales)
 
 | | Baseline | Model |
 |---|---:|---:|
-| Median absolute error, AED per sqm | 10.9% | 7.7% |
-| Mean absolute error, AED per sqm | 3,129 | 2,193 |
-| Median absolute error, total price | 10.9% | 7.7% |
-| Mean absolute error, total price (AED) | 343,796 | 248,578 |
-| 80% interval, share of sales covered | | 78% (raw 73%) |
+| Median absolute error, AED per sqm | 10.9% | 7.8% |
+| Mean absolute error, AED per sqm | 3,129 | 2,205 |
+| Median absolute error, total price | 10.9% | 7.8% |
+| Mean absolute error, total price (AED) | 343,796 | 249,340 |
+| 80% interval, share of sales covered | | 78% (raw 74%) |
 | Median interval width, as a share of the estimate | | 32% |
 
 By segment:
 
 | Segment | Test sales | Baseline MdAPE | Model MdAPE | Model MAE (AED/sqm) | 80% interval coverage |
 |---|---:|---:|---:|---:|---:|
-| Flat | 15,061 | 10.8% | 7.7% | 2,177 | 78% |
-| Villa | 1,268 | 11.6% | 8.2% | 2,372 | 77% |
-| off-plan | 11,422 | 9.0% | 6.8% | 2,016 | 77% |
-| ready | 4,907 | 16.3% | 10.3% | 2,605 | 81% |
+| Flat | 15,061 | 10.8% | 7.7% | 2,190 | 78% |
+| Villa | 1,268 | 11.6% | 8.5% | 2,391 | 76% |
+| off-plan | 11,422 | 9.0% | 6.9% | 2,031 | 76% |
+| ready | 4,907 | 16.3% | 10.3% | 2,612 | 81% |
 
 ![Actual against predicted price per sqm on the test months](docs/charts/actual_vs_predicted.png)
 
@@ -145,17 +145,17 @@ for a model that has to extrapolate past August: it is not riding a trend.
 
 | Feature | Share of split gain |
 |---|---:|
-| `area` | 65.4% |
-| `log_area` | 10.4% |
+| `area` | 65.8% |
+| `log_area` | 10.1% |
 | `is_offplan` | 6.6% |
 | `nearest_metro` | 6.5% |
-| `nearest_landmark` | 5.6% |
-| `month_n` | 1.4% |
+| `nearest_landmark` | 5.7% |
 | `parking_n` | 1.4% |
-| `rooms_n` | 1.1% |
+| `month_n` | 1.4% |
+| `rooms_n` | 1.2% |
 | `rooms` | 0.7% |
 | `property_subtype` | 0.6% |
-| `nearest_mall` | 0.2% |
+| `nearest_mall` | 0.1% |
 | `is_freehold` | 0.0% |
 
 ![Share of split gain by feature](docs/charts/feature_importance.png)
@@ -164,14 +164,14 @@ for a model that has to extrapolate past August: it is not riding a trend.
 
 | Registered | Community | Unit | Registered price | Registered AED/sqm | Model AED/sqm (80% band) | Error |
 |---|---|---|---:|---:|---:|---:|
-| 2026-10-12 | Palm Jumeirah | 4 B/R flat, 452 sqm, ready | 2,500,000 | 5,533 | 28,014 (19,344 to 48,234) | 406% |
-| 2026-09-02 | Hadaeq Sheikh Mohammed Bin Rashid | 2 B/R flat, 101 sqm, off-plan | 548,269 | 5,433 | 26,059 (22,285 to 30,089) | 380% |
-| 2026-09-25 | Burj Khalifa | 2 B/R flat, 184 sqm, off-plan | 1,480,000 | 8,053 | 37,150 (27,727 to 41,237) | 361% |
-| 2026-09-03 | Burj Khalifa | 2 B/R flat, 103 sqm, ready | 752,800 | 7,292 | 29,442 (22,035 to 39,489) | 304% |
-| 2026-10-08 | Dubai Creek Harbour | 1 B/R flat, 64 sqm, ready | 400,000 | 6,294 | 24,382 (21,701 to 29,227) | 287% |
-| 2026-10-01 | Al Wasl | 2 B/R flat, 129 sqm, off-plan | 1,077,000 | 8,317 | 32,022 (26,420 to 37,634) | 285% |
-| 2026-09-25 | Jumeirah Beach Residence | 3 B/R flat, 182 sqm, ready | 1,218,464 | 6,678 | 25,616 (13,916 to 39,138) | 284% |
-| 2026-10-20 | Meydan Avenue | 2 B/R flat, 87 sqm, ready | 486,220 | 5,575 | 20,820 (14,280 to 21,460) | 273% |
+| 2026-10-12 | Palm Jumeirah | 4 B/R flat, 452 sqm, ready | 2,500,000 | 5,533 | 28,072 (20,848 to 49,384) | 407% |
+| 2026-09-25 | Burj Khalifa | 2 B/R flat, 184 sqm, off-plan | 1,480,000 | 8,053 | 40,275 (25,576 to 42,307) | 400% |
+| 2026-09-02 | Hadaeq Sheikh Mohammed Bin Rashid | 2 B/R flat, 101 sqm, off-plan | 548,269 | 5,433 | 25,820 (22,232 to 30,249) | 375% |
+| 2026-09-03 | Burj Khalifa | 2 B/R flat, 103 sqm, ready | 752,800 | 7,292 | 29,685 (21,608 to 39,881) | 307% |
+| 2026-09-25 | Jumeirah Beach Residence | 3 B/R flat, 182 sqm, ready | 1,218,464 | 6,678 | 26,159 (14,419 to 41,566) | 292% |
+| 2026-10-08 | Dubai Creek Harbour | 1 B/R flat, 64 sqm, ready | 400,000 | 6,294 | 24,348 (22,004 to 28,910) | 287% |
+| 2026-09-08 | Dubai Hills | 3 B/R flat, 212 sqm, ready | 1,422,935 | 6,698 | 25,673 (18,434 to 30,769) | 283% |
+| 2026-10-20 | Meydan Avenue | 2 B/R flat, 87 sqm, ready | 486,220 | 5,575 | 21,083 (14,508 to 21,201) | 278% |
 
 Every one of them is a sale registered at a fraction of what anything in that
 community sells for: a four-bedroom flat on Palm Jumeirah at 2.5 million dirhams,
@@ -183,24 +183,27 @@ no flag for them. The model cannot tell them apart from a bargain. A tighter rul
 such as dropping sales below a third of the community median, would remove them,
 but choosing it after seeing the test set would be cheating, so they stay and the
 numbers above include them. The big errors are one-sided: of the
-394 test sales with an error above 50%, 93% are
+407 test sales with an error above 50%, 93% are
 cases where the registered price sits *below* the estimate, which is what you would
 expect if the outliers are under-registered values rather than model blind spots.
 Across all test sales the estimate is above the registered price
 49% of the time, so there is no general bias.
 
 On a separate point, the three models are fitted independently, so the point
-estimate landed outside its own 80% band on 1.6% of test rows before a final rule
-that always widens the band to include it. The coverage figures above include
-that rule.
+estimate landed outside its own 80% band on 1.6% of test
+rows before a final rule that always widens the band to include it. The coverage
+figures above include that rule.
 
 **Size against accuracy.** The model is shipped to the browser as a plain JSON dump
-of its trees (1.49 MB for the point model and the two interval
+of its trees (1.39 MB for the point model and the two interval
 models together) and evaluated by about seventy lines of JavaScript, so the explorer
 needs no server and no machine-learning runtime. A larger configuration (63 leaves,
-about 1,300 trees) scores about 7.2% median absolute error instead of
-7.7%, but its trees weigh 10 MB, which is not something to
-send to a phone for a 0.5-point gain.
+1,260 trees, reproducible with `uv run dubai-prices train --params large
+--models-dir models/large`) scores 7.2% median absolute error instead
+of 7.8%, but its trees weigh 3.5 MB against
+1.39 MB. Twice the download for 0.6 points of error
+was the wrong trade for a page meant to open on a phone, so the smaller one is shipped
+and the larger one's metrics are kept in `models/large/metrics.json`.
 
 ## The explorer
 
@@ -213,9 +216,22 @@ range instead of a confident number.
 
 [![The explorer on a phone](docs/screenshots/explorer-phone.png)](https://hamdanesmail.github.io/dubai-property-prices/)
 
-Everything is precomputed: per-community statistics and comparables are JSON files
-under `web/data/`, and the model is the tree dump described above. There is no
-server, no tracking and no build step; GitHub Pages serves the `web/` folder as is.
+A visitor knows the community but not the building, and inside a community the
+nearest metro, mall and landmark behave like a sub-location: for a ready two-bedroom
+flat in Dubai Marina, the highest of the six most common landmark profiles gives an
+estimate 113% above the lowest. So the page
+does not guess one "typical" building; it averages the model (in log space) over
+the most common nearby-landmark profiles among that cell's own sales. Scored that
+way on the test months, as if the building were unknown for every sale, the median
+error is 8.3% (against 7.8%
+when the building's landmarks are known) and the 80% range covers
+76% of sales. Those are the numbers the page quotes
+for itself.
+
+Everything is precomputed: per-community statistics, comparables and the
+landmark profiles are JSON files under `web/data/`, and the model is the tree dump
+described above. There is no server, no tracking and no build step; GitHub Pages
+serves the `web/` folder as is.
 
 ## Reproduce
 
@@ -231,7 +247,9 @@ uv run dubai-prices all
 `uv run dubai-prices fetch` refreshes the raw data from the DLD endpoint (about 90
 polite requests; resumable), `uv run pytest` runs the tests, and `make all` wraps
 the three steps for people who prefer make. The LightGBM run is deterministic, so
-the numbers in `models/metrics.json` should match this page.
+the numbers in `models/metrics.json` should match this page; the page itself is
+generated from those artefacts by `uv run python scripts/fill_docs.py`, which fills
+the templates under `docs/templates/`, so no figure here was typed by hand.
 
 ```
 src/dubai_prices/   api (client) -> fetch (cache) -> parse -> clean -> build

@@ -103,6 +103,13 @@ def test_normalise_area_names():
     assert clean.normalise_area("INTERNATIONAL CITY PH 1") == "International City Ph 1"
 
 
+def test_metro_spelling_variants_merged():
+    df = fixture_frame()
+    df.loc[df["transaction_number"] == "11-102-2026", "nearest_metro"] = "Jumeirah Beach Resdency"
+    out, _ = clean.clean_sales(df)
+    assert out.set_index("transaction_number").loc["11-102-2026", "nearest_metro"] == "Jumeirah Beach Residency"
+
+
 def test_non_sale_procedures_dropped():
     df = fixture_frame()
     df.loc[df["transaction_number"] == "11-101-2026", "procedure"] = "Lease to Own Registration"
