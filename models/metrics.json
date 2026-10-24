@@ -1,0 +1,213 @@
+{
+ "generated_at": "2026-10-24T15:21:07+00:00",
+ "train": {
+  "rows": 93377,
+  "start": "2026-01-01",
+  "end": "2026-08-31",
+  "early_stopping_month": "2026-08"
+ },
+ "test": {
+  "rows": 16329,
+  "start": "2026-09-01",
+  "end": "2026-10-24"
+ },
+ "baseline": {
+  "n": 16329,
+  "mae_ppsqm": 3129.4149159224894,
+  "mdape_ppsqm": 10.860332422847735,
+  "mae_total": 343795.6098440817,
+  "mdape_total": 10.860332422847733
+ },
+ "model": {
+  "n": 16329,
+  "mae_ppsqm": 2192.5920864704503,
+  "mdape_ppsqm": 7.721840500955052,
+  "mae_total": 248577.63284760382,
+  "mdape_total": 7.721840500955055,
+  "coverage_80": 0.7806969195909119,
+  "coverage_80_raw": 0.7319492926694837,
+  "interval_adjust_log": 0.009925450083373895,
+  "median_interval_width_pct": 32.3958371718243
+ },
+ "by_segment": {
+  "Flat": {
+   "model": {
+    "n": 15061,
+    "mae_ppsqm": 2177.494520573381,
+    "mdape_ppsqm": 7.689775093308684,
+    "mae_total": 214169.099554504,
+    "mdape_total": 7.689775093308686
+   },
+   "baseline": {
+    "n": 15061,
+    "mae_ppsqm": 3130.524821190748,
+    "mdape_ppsqm": 10.803344740615165,
+    "mae_total": 306516.16760475666,
+    "mdape_total": 10.803344740615174
+   },
+   "coverage_80": 0.7814222163202974
+  },
+  "Villa": {
+   "model": {
+    "n": 1268,
+    "mae_ppsqm": 2371.9173545901367,
+    "mdape_ppsqm": 8.17574918014984,
+    "mae_total": 657273.941938595,
+    "mdape_total": 8.175749180149843
+   },
+   "baseline": {
+    "n": 1268,
+    "mae_ppsqm": 3116.231727243272,
+    "mdape_ppsqm": 11.582246994892792,
+    "mae_total": 786591.8871047079,
+    "mdape_total": 11.582246994892794
+   },
+   "coverage_80": 0.7720820189274448
+  },
+  "off-plan": {
+   "model": {
+    "n": 11422,
+    "mae_ppsqm": 2015.5088658764707,
+    "mdape_ppsqm": 6.831296722185785,
+    "mae_total": 202487.58748707853,
+    "mdape_total": 6.831296722185789
+   },
+   "baseline": {
+    "n": 11422,
+    "mae_ppsqm": 2748.5642834372075,
+    "mdape_ppsqm": 9.03542597164812,
+    "mae_total": 270912.96630721644,
+    "mdape_total": 9.035425971648106
+   },
+   "coverage_80": 0.7686919978987918
+  },
+  "ready": {
+   "model": {
+    "n": 4907,
+    "mae_ppsqm": 2604.7878365467573,
+    "mdape_ppsqm": 10.271515209846816,
+    "mae_total": 355861.2069474449,
+    "mdape_total": 10.271515209846815
+   },
+   "baseline": {
+    "n": 4907,
+    "mae_ppsqm": 4015.919078190043,
+    "mdape_ppsqm": 16.275790681535256,
+    "mae_total": 513444.1842231473,
+    "mdape_total": 16.27579068153525
+   },
+   "coverage_80": 0.8086407173425718
+  }
+ },
+ "calibration": {
+  "month": "2026-08",
+  "rows": 10015,
+  "target": 0.8,
+  "raw_coverage": 0.7556665002496256,
+  "adjust_log": 0.009925450083373895
+ },
+ "rounds": {
+  "point": 564,
+  "q10": 783,
+  "q90": 800
+ },
+ "params": {
+  "num_leaves": 31,
+  "learning_rate": 0.1,
+  "min_child_samples": 30,
+  "feature_fraction": 0.9,
+  "bagging_fraction": 0.8,
+  "bagging_freq": 1,
+  "lambda_l2": 1.0,
+  "cat_smooth": 10,
+  "max_cat_threshold": 16,
+  "max_rounds": 3000,
+  "early_stopping": 50,
+  "seed": 42,
+  "deterministic": true,
+  "force_row_wise": true
+ },
+ "quantile_params": {
+  "num_leaves": 15,
+  "learning_rate": 0.1,
+  "min_child_samples": 30,
+  "feature_fraction": 0.9,
+  "bagging_fraction": 0.8,
+  "bagging_freq": 1,
+  "lambda_l2": 1.0,
+  "cat_smooth": 10,
+  "max_cat_threshold": 16,
+  "max_rounds": 800,
+  "early_stopping": 50,
+  "seed": 42,
+  "deterministic": true,
+  "force_row_wise": true
+ },
+ "month_n": 10,
+ "month_label": "October 2026",
+ "features": [
+  "area",
+  "property_subtype",
+  "rooms",
+  "nearest_metro",
+  "nearest_mall",
+  "nearest_landmark",
+  "log_area",
+  "rooms_n",
+  "is_offplan",
+  "is_freehold",
+  "parking_n",
+  "month_n"
+ ],
+ "importance": [
+  {
+   "feature": "area",
+   "gain_share": 0.6536313486351186
+  },
+  {
+   "feature": "log_area",
+   "gain_share": 0.10444429180212421
+  },
+  {
+   "feature": "is_offplan",
+   "gain_share": 0.06578205745210582
+  },
+  {
+   "feature": "nearest_metro",
+   "gain_share": 0.06489537012886121
+  },
+  {
+   "feature": "nearest_landmark",
+   "gain_share": 0.05628241786612533
+  },
+  {
+   "feature": "month_n",
+   "gain_share": 0.014212057535752625
+  },
+  {
+   "feature": "parking_n",
+   "gain_share": 0.014017201685374694
+  },
+  {
+   "feature": "rooms_n",
+   "gain_share": 0.0110567200501257
+  },
+  {
+   "feature": "rooms",
+   "gain_share": 0.0073431168896933826
+  },
+  {
+   "feature": "property_subtype",
+   "gain_share": 0.006381084022396275
+  },
+  {
+   "feature": "nearest_mall",
+   "gain_share": 0.0016824878805657643
+  },
+  {
+   "feature": "is_freehold",
+   "gain_share": 0.0002718460517563275
+  }
+ ],
+ "summary": "train 93,377 rows (2026-01-01 to 2026-08-31), test 16,329 rows (2026-09-01 to 2026-10-24)\nbaseline: MAE 3,129 AED/sqm, MdAPE 10.9%\nmodel:    MAE 2,193 AED/sqm, MdAPE 7.7%, 80% interval coverage 78.1% (raw 73.2%, calibrated on 2026-08)"
+}

@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# Raw API pages are cached locally and are too large for git; the
+# compressed snapshot under data/snapshot/ is what gets committed.
+data/raw/
+data/processed/
+
+# Node / web build output
+node_modules/
+web/dist/
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local editor/agent config
+.claude/
+
+# The large comparison model is reproducible with `dubai-prices train --params large
+# --models-dir models/large`; only its metrics are committed.
+models/large/*
+!models/large/metrics.json

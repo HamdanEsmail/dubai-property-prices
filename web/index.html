@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dubai property prices</title>
+  <meta name="description" content="Price per square metre for flats and villas in Dubai, from Dubai Land Department sales registered in 2026, with a model estimate and recent comparable sales.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Dubai property prices</h1>
+    <p class="lede">What flats and villas actually sold for, community by community, from sales registered with the Dubai Land Department in 2026.</p>
+    <p class="asof">Data as of <strong id="as-of">…</strong> · <span id="row-count">…</span> sales · <a href="https://github.com/HamdanEsmail/dubai-property-prices">how it is built</a></p>
+  </header>
+
+  <main>
+    <section class="card controls" aria-label="Choose a property">
+      <label>Community
+        <select id="area"></select>
+      </label>
+      <label>Type
+        <select id="type"></select>
+      </label>
+      <label>Rooms
+        <select id="rooms"></select>
+      </label>
+      <label>Size, sqm
+        <input id="size" type="number" min="20" max="3000" step="1" inputmode="numeric">
+      </label>
+      <label>Status
+        <select id="offplan">
+          <option value="1">Off-plan</option>
+          <option value="0">Ready</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="card result" aria-live="polite">
+      <div class="headline">
+        <p class="label">Model estimate for this property</p>
+        <p class="big" id="estimate">…</p>
+        <p class="range" id="estimate-range">…</p>
+        <p class="note" id="model-note">Loading the model…</p>
+      </div>
+      <div class="market">
+        <p class="label" id="market-label">Recent sales like this one</p>
+        <p class="mid" id="market-range">…</p>
+        <p class="note" id="market-note"></p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Price per square metre by month</h2>
+      <p class="note" id="chart-note"></p>
+      <div class="chart-wrap">
+        <svg id="chart" viewBox="0 0 720 300" role="img" aria-labelledby="chart-title"><title id="chart-title">Median price per square metre by month</title></svg>
+        <div id="tooltip" class="tooltip" hidden></div>
+      </div>
+      <p class="legend"><span class="swatch community"></span> this community <span class="swatch dubai"></span> all of Dubai (flats and villas)</p>
+    </section>
+
+    <section class="card">
+      <h2>Recent comparable sales</h2>
+      <p class="note" id="comps-note"></p>
+      <div class="table-wrap">
+        <table id="comps">
+          <thead><tr><th>Date</th><th>Project</th><th class="num">Sqm</th><th class="num">Price, AED</th><th class="num">AED/sqm</th><th>Status</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card method">
+      <h2>How to read this</h2>
+      <p><strong>Method:</strong> a gradient-boosting model predicts the log price per square metre from community, type, rooms, size, off-plan status and nearby landmarks; it was fitted on January to August 2026 and checked on September to October (<span id="metrics">…</span>).</p>
+      <p>Prices are registered sale values, not asking prices. Bulk portfolio deals, land, offices and implausible entries are removed before anything is computed. The estimate is a guide, not a valuation.</p>
+      <p class="attribution">Data: Dubai Land Department open data (Transactions), used under the <a href="https://data.dubai/documents/d/guest/open-data-license-english-1-1-pdf">Dubai Open Data Licence</a>. This site is not affiliated with or endorsed by the Dubai Land Department or the Government of Dubai.</p>
+    </section>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
